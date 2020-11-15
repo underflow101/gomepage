@@ -24,15 +24,17 @@ type Item struct {
 type Storage interface {
 	GetByName(context.Context, string) (*Item, error)
 	Put(context.Context, *Item) error
+	PurgeByName(context.Context, string) error
 }
 
-// MongoStorage : MongoDB configuration
-type MongoStorage struct {
-	*mongo.Collection
-	DB string
+// Mongodb : MongoDB configuration
+type Mongodb struct {
+	Client     *mongo.Client
+	DB         string
+	Collection string
 }
 
-func dbInit() {
+func dbInit(_db string, _col string) (*Mongodb, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
@@ -47,12 +49,20 @@ func dbInit() {
 	defer cancel()
 	err = client.Ping(ctx, readpref.Primary())
 
+	db := Mongodb{
+		Client:     client,
+		DB:         _db,
+		Collection: _col,
+	}
+
+	return &db, nil
 }
 
-func insertDoc(client *Client) {
-	collection := client.Database("testing").Collection("numbers")
-}
+func dbWrite(db *Mongodb, idx string, val string) error {
+	collection := db.Client.Database(db.DB).Collection(db.Collection)
 
-func dbInsert(collection *Collection) {
-	res, err := collection.InsertOne(ctx, bson.M{"name": "pi", "value": 3.14159})
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	res, err := collection.InsertOne(ctx, bson.M{idx: val})
+
+	return nil
 }
