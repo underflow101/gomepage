@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
 	mongo "go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -56,13 +55,4 @@ func dbInit(_db string, _col string) (*Mongodb, error) {
 	}
 
 	return &db, nil
-}
-
-func dbWrite(db *Mongodb, idx string, val string) error {
-	collection := db.Client.Database(db.DB).Collection(db.Collection)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	res, err := collection.InsertOne(ctx, bson.M{idx: val})
-
-	return nil
 }
