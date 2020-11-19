@@ -16,10 +16,20 @@ import (
 )
 
 func main() {
+	ctx, cancel = context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	err = client.Ping(ctx, readpref.Primary())
+
+	collection := client.Database(db.DB).Collection(db.Collection)
+
 	e := router.New()
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, World!")
+	})
+	e.PUT("/dbWrite", func(c echo.Context) error {
+		collection.InsertOne(bson)
+		return c.String(http.StatusOK, "DONE")
 	})
 	e.Logger.Fatal(e.Start(":8000"))
 
@@ -32,12 +42,6 @@ func main() {
 			panic(err)
 		}
 	}()
-
-	ctx, cancel = context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-	err = client.Ping(ctx, readpref.Primary())
-
-	collection := client.Database(db.DB).Collection(db.Collection)
 
 	i := db.DB
 }
